@@ -26,6 +26,7 @@ main {
 .expense-table {
     width: 100%;
     border-collapse: collapse;
+    align-self: flex-start;
 }
 
 .expense-table select {
@@ -74,7 +75,8 @@ main {
 .input-container {
     display: flex;
     flex-direction: column;
-    margin-bottom: 12px;
+    margin-bottom: 18px;
+    position: relative;
 }
 
 .input-container label {
@@ -104,7 +106,7 @@ main {
     background-color: white;
     border: 1px solid;
     position: absolute;
-    display: none;
+    /* display: none; */
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
@@ -120,7 +122,16 @@ main {
     background-color: #ddd;
 }
 
-
+.error{
+    font-size: 12px;
+    color: red;
+    margin: 0;
+    position: absolute;
+    top: 100%;
+}
+.clear{
+    cursor: pointer;
+}
 @media (max-width: 900px) {
     body {
         margin-inline: 16px;

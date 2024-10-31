@@ -1,47 +1,150 @@
-import React from "react";
+import React, { useState } from "react";
+import Input from "./Input";
+import Select from "./Select";
 
-const ExpenseForm = ({setExpenses}) => {
+const ExpenseForm = ({
+  setExpenses,
+  userDetails,
+  setUserDetails,
+  editingRowId,
+  setEditingRowId,
+}) => {
+  const [errors, setErrors] = useState({});
+
+  const validateConfig = {
+    title: [
+      { required: true, message: "please enter title" },
+      { minLength: 5, message: "title should be atleast 5 characters long" },
+    ],
+    category: [{ required: true, message: "please select a category" }],
+    amount: [
+      { required: true, message: "please enter amount" },
+      { pattern: /^[1-9]\d*(\.\d+)?$/, message: "please enter a valid number" },
+    ],
+    // email: [
+    //   { required: true, message: "please enter email" },
+    //   {
+    //     pattern: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+    //     message: "please enter an valid email",
+    //   },
+    // ],
+  };
+
+  const validate = (formData) => {
+    // console.log(formData)
+    const errorsData = {};
+    // console.log(Object.entries(formData));
+    Object.entries(formData).forEach(([key, value]) => {
+      // console.log(key,value)
+      // console.log(validateConfig[key])
+      validateConfig[key].some((rule) => {
+        // console.log(rule);
+        if (rule.required && !value) {
+          errorsData[key] = rule.message;
+          return true;
+        }
+        if (rule.minLength && value.length < 5) {
+          errorsData[key] = rule.message;
+          return true;
+        }
+        if(rule.pattern && !rule.pattern.test(value)){
+          errorsData[key] = rule.message
+        }
+        // if (rule.pattern && !rule.pattern.test(value)) {
+        //   errorsData[key] = rule.message;
+        //   return true;
+        // }
+      });
+    });
+
+    setErrors(errorsData);
+    return errorsData;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    // console.log(e.target);
-    const expenselist = {...getFormData(e.target),id:crypto.randomUUID()} 
-    setExpenses((prev)=>[...prev,expenselist])
-    // console.log(getFormData(e.target))
-    e.target.reset();
+
+    const validateResult = validate(userDetails);
+    // console.log(Object.keys(validateResult));
+    if (Object.keys(validateResult).length) return;
+
+    if (editingRowId) {
+      setExpenses((prev) =>
+        prev.map((prevExpense) => {
+          if (prevExpense.id === editingRowId) {
+            return { ...userDetails, id: editingRowId };
+          }
+          return prevExpense;
+        })
+      );
+      setUserDetails({
+        title: "",
+        category: "",
+        amount: "",
+      });
+      setEditingRowId("");
+      return;
+    }
+    setExpenses((prev) => [
+      ...prev,
+      { ...userDetails, id: crypto.randomUUID() },
+    ]);
+
+    setUserDetails({
+      title: "",
+      category: "",
+      amount: "",
+    });
   };
 
-  const getFormData = (form) => {
-    const formData = new FormData(form);
-    const data = {};
-    for (const [key, value] of formData.entries()) {
-      data[key] = value;
-    }
-    return data;
+  const onchangeHandler = (e) => {
+    const { name, value } = e.target;
+    setUserDetails((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setErrors({});
   };
+
   return (
     <form className="expense-form" onSubmit={handleSubmit}>
-      <div className="input-container">
+      {/* <div className="input-container">
         <label htmlFor="title">Title</label>
-        <input id="title" name="title" />
-      </div>
-      <div className="input-container">
-        <label htmlFor="category">Category</label>
-        <select id="category" name="category">
-          <option value="" hidden>
-            Select Category
-          </option>
-          <option value="grocery">Grocery</option>
-          <option value="clothes">Clothes</option>
-          <option value="bills">Bills</option>
-          <option value="education">Education</option>
-          <option value="medicine">Medicine</option>
-        </select>
-      </div>
-      <div className="input-container">
-        <label htmlFor="amount">Amount</label>
-        <input id="amount" name="amount" />
-      </div>
-      <button className="add-btn">Add</button>
+        <input
+          id="title"
+          name="title"
+          value={userDetails.title}
+          onChange={onchangeHandler}
+        />
+        <p className="error">{errors.title}</p>
+      </div> */}
+      <Input
+        label="Title"
+        id="title"
+        name="title"
+        value={userDetails.title}
+        onChange={onchangeHandler}
+        error={errors.title}
+      />
+      <Select
+        label="Category"
+        id="category"
+        name="category"
+        value={userDetails.category}
+        onChange={onchangeHandler}
+        options={["Grocery", "Clothes", "Bills", "Education", "Medicine"]}
+        defaultOption="Select category"
+        error={errors.category}
+      />
+      <Input
+        label="Amount"
+        id="amount"
+        name="amount"
+        value={userDetails.amount}
+        onChange={onchangeHandler}
+        error={errors.amount}
+      />
+      <button className="add-btn">{editingRowId ? "Save" : "Add"}</button>
     </form>
   );
 };
